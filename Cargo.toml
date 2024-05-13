@@ -2,6 +2,12 @@
 name = "valord-map"
 version = "0.1.0"
 edition = "2021"
+authors = ["tedious"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/tediou5/valord-map"
+description = "A dictionary sorted by values."
+keywords = ["map", "sort-map", "sort-by-value"]
 
 [features]
 watcher = ["tokio/sync"]
