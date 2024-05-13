@@ -1,0 +1,19 @@
+[package]
+name = "valord-map"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+watcher = ["tokio/sync"]
+
+[dependencies]
+tracing = { version = "0.1.40" }
+tokio = { version = "1.37.0", optional = true }
+
+[dev-dependencies]
+anyhow = "1.0.83"
+etcd-client = { version = "0.12.4", features = ["tls"] }
+tokio = { version = "1.37.0", features = ["full"] }
+
+[[example]]
+name = "etcd_watcher"
