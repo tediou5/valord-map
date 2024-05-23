@@ -6,6 +6,7 @@ authors = ["tedious"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/tediou5/valord-map"
+documentation = "https://docs.rs/valord-map/latest/valord_map"
 description = "A dictionary sorted by values."
 keywords = ["map", "sort-map", "sort-by-value"]
 
