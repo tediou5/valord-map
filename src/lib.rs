@@ -1,4 +1,3 @@
-#![doc = "no_run"]
 #![doc = include_str!("../README.md")]
 #![doc(html_playground_url = "https://play.rust-lang.org")]
 
