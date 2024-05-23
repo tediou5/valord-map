@@ -1,6 +1,6 @@
 [package]
 name = "valord-map"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["tedious"]
 license = "MIT"
@@ -9,12 +9,9 @@ repository = "https://github.com/tediou5/valord-map"
 description = "A dictionary sorted by values."
 keywords = ["map", "sort-map", "sort-by-value"]
 
-[features]
-watcher = ["tokio/sync"]
-
 [dependencies]
 tracing = { version = "0.1.40" }
-tokio = { version = "1.37.0", optional = true }
+tokio = { version = "1.37.0", features = ["sync"] }
 
 [dev-dependencies]
 anyhow = "1.0.83"

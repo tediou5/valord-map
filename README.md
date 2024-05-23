@@ -27,7 +27,7 @@ etcd-client = { version = "0.12.4", features = ["tls"] }
 tokio = { version = "1.37.0", features = ["full"] }
 ```
 
-```rust
+```no_run
 use etcd_client::{Client, EventType, WatchOptions};
 use std::{
     sync::Arc,
