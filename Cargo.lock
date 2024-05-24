@@ -1130,6 +1130,7 @@ version = "0.2.2"
 dependencies = [
  "anyhow",
  "etcd-client",
+ "indexmap 2.2.6",
  "tokio",
  "tracing",
 ]
