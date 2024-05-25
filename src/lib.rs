@@ -10,6 +10,8 @@ pub use watcher::Watcher;
 
 use std::{
     collections::{BTreeMap, HashSet},
+    hash::Hash,
+    ops::{Deref, DerefMut},
     sync::Arc,
 };
 use tokio::sync::watch;
@@ -17,22 +19,101 @@ use tracing::trace;
 
 pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
     map: IndexMap<K, Option<V>>,
-    // map: HashMap<Arc<K>, ValueOrdBy<V>>,
     sorted_indexs: BTreeMap<T, HashSet<usize>>,
     sender: watch::Sender<Option<Arc<V>>>,
 }
 
-pub struct PeekMut<'a, T, K, V: OrdBy<Target = T>> {
-    valor: &'a mut ValordMap<T, K, V>,
-    // If a set_len + sift_down are required, this is Some. If a &mut T has not
-    // yet been exposed to peek_mut()'s caller, it's None.
-    // original_len: Option<NonZero<usize>>,
+pub struct RefMut<'a, T, K, V>
+where
+    T: Ord + Clone,
+    K: Hash + Eq,
+    V: OrdBy<Target = T>,
+{
+    // key: &'k K,
+    index: usize,
+    valord: &'a mut ValordMap<T, K, V>,
+}
+
+impl<'a, T, K, V> RefMut<'a, T, K, V>
+where
+    T: Ord + Clone,
+    K: Hash + Eq,
+    V: OrdBy<Target = T>,
+{
+    fn tyr_new(valord: &'a mut ValordMap<T, K, V>, key: &K) -> Option<RefMut<'a, T, K, V>> {
+        // TODO:
+        let (index, _, v) = valord.map.get_full(key)?;
+        let ord_by = v.as_ref().map(|v| v.ord_by())?;
+        ValordMap::<T, K, V>::remove_from_indexs(&mut valord.sorted_indexs, ord_by, index);
+        Some(Self { index, valord })
+    }
+}
+
+impl<'a, T, K, V> Deref for RefMut<'a, T, K, V>
+where
+    T: Ord + Clone,
+    K: Hash + Eq,
+    V: OrdBy<Target = T>,
+{
+    type Target = V;
+
+    fn deref(&self) -> &Self::Target {
+        // Safety: if value is not exist, try_new() will return None
+        self.valord
+            .get_by_index(self.index)
+            .map(|(_, v)| v)
+            .unwrap()
+    }
+}
+
+impl<'a, T, K, V> DerefMut for RefMut<'a, T, K, V>
+where
+    T: Ord + Clone,
+    K: Hash + Eq,
+    V: OrdBy<Target = T>,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        // Safety: if value is not exist, try_new() will return None
+        let v = self
+            .valord
+            .map
+            .get_index_mut(self.index)
+            .and_then(|(_, maybe_val)| maybe_val.as_mut())
+            .unwrap();
+        ValordMap::<T, K, V>::remove_from_indexs(
+            &mut self.valord.sorted_indexs,
+            v.ord_by(),
+            self.index,
+        );
+        v
+    }
+}
+
+impl<'a, T, K, V> Drop for RefMut<'a, T, K, V>
+where
+    T: Ord + Clone,
+    K: Hash + Eq,
+    V: OrdBy<Target = T>,
+{
+    fn drop(&mut self) {
+        if let Some(ord_by) = self
+            .valord
+            .get_by_index(self.index)
+            .map(|(_, v)| v.ord_by().clone())
+        {
+            self.valord
+                .sorted_indexs
+                .entry(ord_by)
+                .or_default()
+                .insert(self.index);
+        };
+    }
 }
 
 impl<T, K, V> ValordMap<T, K, V>
 where
     T: Ord + Clone,
-    K: std::hash::Hash + Eq,
+    K: Hash + Eq,
     V: OrdBy<Target = T>,
 {
     pub fn new() -> Self {
@@ -245,7 +326,28 @@ where
         self.map.get(key).and_then(|v| v.as_ref())
     }
 
-    // TODO: move to entry
+    /// Get the ref mut value by given key, or return `None` if not found
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("key1", 1);
+    /// sorted_map.insert("key2", 2);
+    /// sorted_map.insert("key3", 3);
+    ///
+    /// let mut val = sorted_map.get_mut(&"key2").unwrap();
+    /// *val = 4;
+    /// drop(val);
+    /// assert_eq!(sorted_map.get(&"key2").unwrap(), &4);
+    /// assert_eq!(sorted_map.last(), vec![(&"key2", &4)]);
+    /// ```
+    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RefMut<'a, T, K, V>> {
+        RefMut::tyr_new(self, key)
+    }
+
     /// Modify value in map, if exist return true, else return false
     ///
     /// # Example
@@ -342,6 +444,13 @@ where
         indexs.iter().filter_map(|index| self.get_by_index(*index))
     }
 
+    // fn iter_mut_from_indexs<'a>(
+    //     &'a mut self,
+    //     indexs: &'a HashSet<usize>,
+    // ) -> impl Iterator<Item = (&K, &'a mut V)> {
+    //     indexs.iter().filter_map(|index| self.get_mut_by_index(*index))
+    // }
+
     fn remove_from_indexs(sorted_indexs: &mut BTreeMap<T, HashSet<usize>>, key: &T, index: usize) {
         if let Some(indexs) = sorted_indexs.get_mut(key) {
             indexs.remove(&index);
@@ -384,7 +493,7 @@ mod tests {
     impl OrdBy for OrdByValue {
         type Target = usize;
 
-        fn ord_by<'a>(&'a self) -> &Self::Target {
+        fn ord_by(&self) -> &Self::Target {
             &self.order_by
         }
     }
