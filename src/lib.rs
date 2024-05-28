@@ -23,54 +23,55 @@ pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
     sender: watch::Sender<Option<Arc<V>>>,
 }
 
-pub struct RefMut<'r, T, K, V>
+pub struct RefMut<'v, T, K, V>
 where
     T: Ord + Clone,
     K: Hash + Eq,
     V: OrdBy<Target = T>,
 {
     index: usize,
-    valord: &'r mut ValordMap<T, K, V>,
+    valord: &'v mut ValordMap<T, K, V>,
 }
 
-impl<'r, T, K, V> RefMut<'r, T, K, V>
+impl<'v, T, K, V> RefMut<'v, T, K, V>
 where
     T: Ord + Clone,
     K: Hash + Eq,
     V: OrdBy<Target = T>,
 {
-    fn try_new_by_key<'a: 'r>(
+    fn try_new_by_key<'a: 'v>(
         valord: &'a mut ValordMap<T, K, V>,
         key: &K,
-    ) -> Option<RefMut<'r, T, K, V>> {
+    ) -> Option<RefMut<'v, T, K, V>> {
         let (index, _, v) = valord.map.get_full(key)?;
         let ord_by = v.as_ref().map(|v| v.ord_by())?;
         ValordMap::<T, K, V>::remove_from_indexs(&mut valord.sorted_indexs, ord_by, index);
         Some(Self { index, valord })
     }
 
-    fn try_new_by_index<'a: 'r>(
+    fn try_new_by_index<'a: 'v>(
         valord: &'a mut ValordMap<T, K, V>,
         index: usize,
-    ) -> Option<RefMut<'r, T, K, V>> {
+    ) -> Option<RefMut<'v, T, K, V>> {
         let ord_by = valord.get_by_index(index)?.1.ord_by().clone();
         ValordMap::<T, K, V>::remove_from_indexs(&mut valord.sorted_indexs, &ord_by, index);
         Some(Self { index, valord })
     }
 
-    pub fn get_mut_with_key(&mut self) -> Option<(&K, &mut V)> {
+    pub fn get_mut_with_key(&mut self) -> (&K, &mut V) {
         let (k, v) = self
             .valord
             .map
             .get_index_mut(self.index)
-            .and_then(|(k, maybe_val)| maybe_val.as_mut().map(|v| (k, v)))?;
+            .map(|(k, v)| (k, v.as_mut().unwrap()))
+            .unwrap();
         ValordMap::<T, K, V>::remove_from_indexs(
             &mut self.valord.sorted_indexs,
             v.ord_by(),
             self.index,
         );
 
-        Some((k, v))
+        (k, v)
     }
 }
 
@@ -99,7 +100,7 @@ where
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         // Safety: if value is not exist, try_new() will return None
-        self.get_mut_with_key().unwrap().1
+        self.get_mut_with_key().1
     }
 }
 
@@ -265,6 +266,51 @@ where
     /// sorted_map.insert("qians", 1);
     /// sorted_map.insert("tedious", 2);
     /// sorted_map.insert("xuandu", 3);
+    ///
+    ///
+    /// let mut iter = sorted_map.iter_mut();
+    ///
+    /// let mut item1 = iter.next().unwrap();
+    /// let (k, v) = item1.get_mut_with_key();
+    /// assert_eq!(v, &mut 1);
+    /// *v = 4;
+    /// drop(item1);
+    ///
+    /// assert_eq!(iter.next().unwrap().get_mut_with_key(), (&"tedious", &mut 2));
+    /// assert_eq!(iter.next().unwrap().get_mut_with_key(), (&"xuandu", &mut 3));
+    /// assert!(iter.next().is_none());
+    /// drop(iter);
+    ///
+    /// let max_list = sorted_map.last();
+    /// assert_eq!(max_list.len(), 1);
+    /// assert_eq!(max_list, vec![(&"qians", &4)]);
+    /// ```
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = RefMut<'_, T, K, V>> {
+        let indexs: Vec<_> = self
+            .sorted_indexs
+            .iter()
+            .flat_map(|(_, indexs)| indexs.iter())
+            .copied()
+            .collect();
+        let valord: *mut ValordMap<T, K, V> = self;
+        indexs.into_iter().filter_map(move |index| {
+            let vm = unsafe { valord.as_mut()? };
+            vm.get_mut_by_index(index)
+        })
+    }
+
+    /// Returns an iterator over the ValordMap.
+    /// The iterator yields all items from start to end order by value.ord_by().
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("xuandu", 3);
     /// sorted_map.insert("xuandu", 1);
     ///
     /// let mut iter = sorted_map.iter();
@@ -396,6 +442,10 @@ where
     /// ```
     pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RefMut<'a, T, K, V>> {
         RefMut::try_new_by_key(self, key)
+    }
+
+    fn get_mut_by_index(&mut self, index: usize) -> Option<RefMut<'_, T, K, V>> {
+        RefMut::try_new_by_index(self, index)
     }
 
     /// Modify value in map, if exist return true, else return false
