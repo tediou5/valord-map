@@ -4,17 +4,18 @@
 mod order_by;
 pub use order_by::OrdBy;
 
-use indexmap::IndexMap;
+use indexmap::{map::MutableKeys, IndexMap};
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashSet, VecDeque},
     hash::Hash,
     ops::{Deref, DerefMut},
 };
 
 pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
-    // FIXME: add free indexs
     map: IndexMap<K, Option<V>>,
     sorted_indexs: BTreeMap<T, HashSet<usize>>,
+
+    free_indexs: VecDeque<usize>,
 }
 
 pub struct RefMut<'v, T, K, V>
@@ -129,6 +130,7 @@ where
         ValordMap {
             map: IndexMap::new(),
             sorted_indexs: BTreeMap::new(),
+            free_indexs: VecDeque::new(),
         }
     }
 
@@ -147,6 +149,8 @@ where
     ///
     /// let sorted_pairs: Vec<_> = sorted_map.iter().collect();
     ///
+    /// println!("{:?}", sorted_pairs);
+    ///
     /// assert_eq!(sorted_pairs.len(), 3);
     /// assert_eq!(sorted_pairs[0].1, &1);
     /// assert_eq!(sorted_pairs[1].1, &1);
@@ -160,10 +164,22 @@ where
     fn _insert(&mut self, key: K, value: V) {
         let ord_by = value.ord_by().clone();
 
-        let (index, old_val) = self.map.insert_full(key, Some(value));
-        if let Some(old_val) = old_val.flatten() {
-            Self::remove_from_indexs(&mut self.sorted_indexs, old_val.ord_by(), index)
-        }
+        let index = if let Some((index, _k, old_val)) = self.map.get_full_mut(&key) {
+            if let Some(old_val) = old_val {
+                Self::remove_from_indexs(&mut self.sorted_indexs, old_val.ord_by(), index);
+                *old_val = value;
+            }
+            index
+        } else if let Some(free_index) = self.free_indexs.front().copied()
+            && let Some((k, v)) = self.map.get_index_mut2(free_index)
+        {
+            *k = key;
+            *v = Some(value);
+            self.free_indexs.pop_front();
+            free_index
+        } else {
+            self.map.insert_full(key, Some(value)).0
+        };
 
         self.sorted_indexs.entry(ord_by).or_default().insert(index);
     }
@@ -480,9 +496,9 @@ where
     /// assert_eq!(sorted_map.get(&1), None);
     /// ```
     pub fn remove_entry<'a>(&'a mut self, key: &'a K) -> Option<(&K, V)> {
-        // FIXME: add free indexs
         if let Some((i, k, v)) = self.map.get_full_mut(key) {
             if let Some(old) = v.take() {
+                self.free_indexs.push_back(i);
                 Self::remove_from_indexs(&mut self.sorted_indexs, old.ord_by(), i);
                 return Some((k, old));
             };
@@ -601,7 +617,6 @@ mod tests {
         sorted_map.insert("y", 4);
 
         let sorted_pairs: Vec<_> = sorted_map.iter().collect();
-        // println!("sorted_map: {sorted_map:?}");
         println!("sorted_pairs: {sorted_pairs:?}");
         assert_eq!(sorted_pairs.len(), 3);
         assert_eq!(sorted_pairs[0], (&"x", &2));

@@ -9,7 +9,7 @@ struct People {
 impl OrdBy for People {
     type Target = u8;
 
-    fn ord_by<'a>(&'a self) -> &Self::Target {
+    fn ord_by(&self) -> &Self::Target {
         &self.age
     }
 }
@@ -117,7 +117,7 @@ fn main() {
         .map(|mut rm_p| {
             let (k, v) = rm_p.get_mut_with_key();
             v.age = 30;
-            (k.clone(), v.name.clone(), v.age)
+            (*k, v.name.clone(), v.age)
         })
         .collect();
 
