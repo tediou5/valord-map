@@ -12,6 +12,7 @@ use std::{
 };
 
 pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
+    // FIXME: add free indexs
     map: IndexMap<K, Option<V>>,
     sorted_indexs: BTreeMap<T, HashSet<usize>>,
 }
@@ -353,7 +354,7 @@ where
     ///     Some((&"xuandu", &8))
     /// );
     /// ```
-    pub fn range_mut<'a, R>(&'a mut self, range: R) -> impl Iterator<Item = RefMut<'a, T, K, V>>
+    pub fn range_mut<R>(&mut self, range: R) -> impl Iterator<Item = RefMut<'_, T, K, V>>
     where
         R: std::ops::RangeBounds<V::Target>,
     {
@@ -479,6 +480,7 @@ where
     /// assert_eq!(sorted_map.get(&1), None);
     /// ```
     pub fn remove_entry<'a>(&'a mut self, key: &'a K) -> Option<(&K, V)> {
+        // FIXME: add free indexs
         if let Some((i, k, v)) = self.map.get_full_mut(key) {
             if let Some(old) = v.take() {
                 Self::remove_from_indexs(&mut self.sorted_indexs, old.ord_by(), i);
