@@ -1,25 +1,3 @@
-# Valord Map
-
-## Overview
-
-A dictionary sorted by values.
-
-You can directly sort based on your data structure or implement OrdBy to specify sorting based on a particular field.
-
-[![Crates.io][crates-badge]][crates-url]
-[![docs.rs][docs-badge]][docs-url]
-[![MIT licensed][mit-badge]][mit-url]
-
-[crates-badge]: https://img.shields.io/crates/v/valord_map.svg
-[crates-url]: https://crates.io/crates/valord-map
-[docs-badge]: https://docs.rs/valord_map/badge.svg
-[docs-url]: https://docs.rs/valord-map
-[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: https://github.com/tediou5/valord-map/blob/master/LICENSE
-
-## Example
-
-```rust
 use valord_map::{OrdBy, ValordMap};
 
 #[derive(Debug, PartialEq)]
@@ -169,4 +147,3 @@ fn main() {
     );
     println!("peoples: {:?}", peoples.iter().collect::<Vec<_>>());
 }
-```

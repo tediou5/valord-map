@@ -12,13 +12,7 @@ keywords = ["map", "sort-map", "sort-by-value"]
 
 [dependencies]
 tracing = { version = "0.1.40" }
-tokio = { version = "1.37.0", features = ["sync"] }
 indexmap = "2.2.6"
 
-[dev-dependencies]
-anyhow = "1.0.83"
-etcd-client = { version = "0.12.4", features = ["tls"] }
-tokio = { version = "1.37.0", features = ["full"] }
-
 [[example]]
-name = "etcd_watcher"
+name = "people_ord_by_age"

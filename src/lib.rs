@@ -1,26 +1,19 @@
+#![feature(let_chains)]
 #![doc = include_str!("../README.md")]
 #![doc(html_playground_url = "https://play.rust-lang.org")]
-
 mod order_by;
-use indexmap::IndexMap;
 pub use order_by::OrdBy;
 
-mod watcher;
-pub use watcher::Watcher;
-
+use indexmap::IndexMap;
 use std::{
     collections::{BTreeMap, HashSet},
     hash::Hash,
     ops::{Deref, DerefMut},
-    sync::Arc,
 };
-use tokio::sync::watch;
-use tracing::trace;
 
 pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
     map: IndexMap<K, Option<V>>,
     sorted_indexs: BTreeMap<T, HashSet<usize>>,
-    sender: watch::Sender<Option<Arc<V>>>,
 }
 
 pub struct RefMut<'v, T, K, V>
@@ -135,48 +128,7 @@ where
         ValordMap {
             map: IndexMap::new(),
             sorted_indexs: BTreeMap::new(),
-            sender: watch::channel(None).0,
         }
-    }
-
-    /// Watch a key, trigger a notification when the maximum value changes.
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// use valord_map::ValordMap;
-    /// use std::time::Duration;
-    ///
-    ///#[tokio::main]
-    ///async fn main() {
-    ///    let mut sorted_map = ValordMap::new();
-    ///    let mut watcher = sorted_map.watcher();
-    ///    let handle = tokio::spawn(async move {
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("qians", 1);
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("tedious", 2);
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("sheng", 3);
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("xuandu", 4);
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("xuandu2", 5);
-    ///        tokio::time::sleep(Duration::from_secs(1)).await;
-    ///        sorted_map.insert("xuandu3", 6);
-    ///    });
-    ///
-    ///    println!("watching...");
-    ///    for v in 1..=6 {
-    ///        let header = watcher.head_changed().await.unwrap().unwrap();
-    ///        assert_eq!(&v, header.as_ref());
-    ///    }
-    ///
-    ///   let _ = handle.await;
-    /// }
-    /// ```
-    pub fn watcher(&self) -> Watcher<V> {
-        self.sender.subscribe().into()
     }
 
     /// insert into ValordMap
@@ -207,25 +159,12 @@ where
     fn _insert(&mut self, key: K, value: V) {
         let ord_by = value.ord_by().clone();
 
-        let mut changed = true;
-        if let Some((curr_head, _)) = self.sorted_indexs.last_key_value() {
-            if curr_head >= &ord_by {
-                changed = false
-            }
-        };
-
         let (index, old_val) = self.map.insert_full(key, Some(value));
         if let Some(old_val) = old_val.flatten() {
             Self::remove_from_indexs(&mut self.sorted_indexs, old_val.ord_by(), index)
         }
 
         self.sorted_indexs.entry(ord_by).or_default().insert(index);
-
-        if changed {
-            // TODO:
-            trace!("head changed");
-            // let _ = self.sender.send(Some(value.clone().0));
-        }
     }
 
     /// Returns an iterator over the ValordMap.
@@ -299,42 +238,6 @@ where
         })
     }
 
-    /// Returns an iterator over the ValordMap.
-    /// The iterator yields all items from start to end order by value.ord_by().
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use valord_map::ValordMap;
-    ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
-    ///
-    /// let mut iter = sorted_map.iter();
-    ///
-    /// assert_eq!(iter.next().unwrap().1, &1);
-    /// assert_eq!(iter.next().unwrap().1, &1);
-    /// assert_eq!(iter.next().unwrap(), (&"tedious", &2));
-    /// ```
-    // pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = RefMut<'a, T, K, V>> {
-    //     let sorted_indexs = self
-    //         .sorted_indexs
-    //         .iter()
-    //         .flat_map(|(_, indexs)| indexs.iter())
-    //         .copied()
-    //         .collect::<Vec<usize>>();
-    //     let valord = Mutex::new(self);
-    //     sorted_indexs.into_iter().filter_map(|index| {
-    //         let mut map = valord.lock().unwrap();
-    //         RefMut::try_new_by_index(&mut map, index)
-    //         // .and_then(|mut ref_mut| ref_mut.get_mut_with_key()
-    //     })
-    //     // })
-    // }
-
     /// Returns the first vector of key-value pairs in the map. The value in this pair is the minimum values in the map.
     ///
     /// # Example
@@ -385,7 +288,7 @@ where
             .unwrap_or_default()
     }
 
-    /// remove from ValordMap
+    /// get range from ValordMap
     ///
     /// # Example
     ///
@@ -418,6 +321,72 @@ where
             .flat_map(|(_, indexs)| self.iter_from_indexs(indexs))
     }
 
+    /// get range mut from ValordMap
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("sheng", 3);
+    /// sorted_map.insert("xuandu", 4);
+    /// sorted_map.insert("xuandu2", 5);
+    /// sorted_map.insert("xuandu3", 6);
+    ///
+    /// let mut range_iter = sorted_map.range_mut(4..);
+    ///
+    /// let mut item1 = range_iter.next().unwrap();
+    /// let (k, v) = item1.get_mut_with_key();
+    /// assert_eq!(k, &"xuandu");
+    /// assert_eq!(v, &mut 4);
+    /// *v += 4;
+    /// drop(item1);
+    /// drop(range_iter);
+    ///
+    /// assert_eq!(
+    ///     sorted_map
+    ///         .range(4..)
+    ///         .last(),
+    ///     Some((&"xuandu", &8))
+    /// );
+    /// ```
+    pub fn range_mut<'a, R>(&'a mut self, range: R) -> impl Iterator<Item = RefMut<'a, T, K, V>>
+    where
+        R: std::ops::RangeBounds<V::Target>,
+    {
+        let range: Vec<_> = self
+            .sorted_indexs
+            .range(range)
+            .flat_map(|(_, indexs)| indexs.iter())
+            .copied()
+            .collect();
+        let valord: *mut ValordMap<T, K, V> = self;
+        range.into_iter().filter_map(move |index| {
+            let vm = unsafe { valord.as_mut()? };
+            vm.get_mut_by_index(index)
+        })
+    }
+
+    /// Get the ref value by given key, or return `None` if not found
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("key1", 1);
+    /// sorted_map.insert("key2", 2);
+    /// sorted_map.insert("key3", 3);
+    ///
+    /// let mut val1 = sorted_map.get(&"key2");
+    /// let mut val2 = sorted_map.get(&"key4");
+    /// assert_eq!(val1.unwrap(), &2);
+    /// assert_eq!(val2, None);
+    /// ```
     pub fn get(&self, key: &K) -> Option<&V> {
         self.map.get(key).and_then(|v| v.as_ref())
     }
@@ -442,10 +411,6 @@ where
     /// ```
     pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RefMut<'a, T, K, V>> {
         RefMut::try_new_by_key(self, key)
-    }
-
-    fn get_mut_by_index(&mut self, index: usize) -> Option<RefMut<'_, T, K, V>> {
-        RefMut::try_new_by_index(self, index)
     }
 
     /// Modify value in map, if exist return true, else return false
@@ -529,6 +494,10 @@ where
             .and_then(|(k, maybe_val)| maybe_val.as_ref().map(|v| (k, v)))
     }
 
+    fn get_mut_by_index(&mut self, index: usize) -> Option<RefMut<'_, T, K, V>> {
+        RefMut::try_new_by_index(self, index)
+    }
+
     fn get_full_mut<'a>(
         map: &'a mut IndexMap<K, Option<V>>,
         key: &'a K,
@@ -543,13 +512,6 @@ where
     ) -> impl Iterator<Item = (&K, &V)> {
         indexs.iter().filter_map(|index| self.get_by_index(*index))
     }
-
-    // fn iter_mut_from_indexs<'a>(
-    //     &'a mut self,
-    //     indexs: &'a HashSet<usize>,
-    // ) -> impl Iterator<Item = (&K, &'a mut V)> {
-    //     indexs.iter().filter_map(|index| self.get_mut_by_index(*index))
-    // }
 
     fn remove_from_indexs(sorted_indexs: &mut BTreeMap<T, HashSet<usize>>, key: &T, index: usize) {
         if let Some(indexs) = sorted_indexs.get_mut(key) {
@@ -575,8 +537,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // use std::time::Duration;
 
     #[derive(Debug, PartialEq, Eq)]
     struct OrdByValue {
@@ -646,32 +606,4 @@ mod tests {
         assert_eq!(sorted_pairs[1], (&"xuandu", &3));
         assert_eq!(sorted_pairs[2], (&"y", &4));
     }
-
-    // #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    // async fn watch() {
-    //     let mut sorted_map = ValordMap::new();
-    //     let mut watcher = sorted_map.watcher();
-    //     let handle = tokio::spawn(async move {
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("qians", 1);
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("tedious", 2);
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("sheng", 3);
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("xuandu", 4);
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("xuandu2", 5);
-    //         tokio::time::sleep(Duration::from_secs(1)).await;
-    //         sorted_map.insert("xuandu3", 6);
-    //     });
-
-    //     println!("watching...");
-    //     for v in 1..=6 {
-    //         let header = watcher.head_changed().await.unwrap().unwrap();
-    //         assert_eq!(&v, header.as_ref());
-    //     }
-
-    //     let _ = handle.await;
-    // }
 }
