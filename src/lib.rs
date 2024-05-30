@@ -506,6 +506,33 @@ where
         None
     }
 
+    /// Return the number of key-value pairs in the map.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert(1, "a");
+    /// sorted_map.insert(2, "b");
+    /// sorted_map.insert(3, "c");
+    /// sorted_map.insert(2, "d");
+    ///
+    /// assert_eq!(sorted_map.len(), 3);
+    ///
+    /// let removed_value = sorted_map.remove(&1);
+    /// assert_eq!(removed_value, Some("a"));
+    /// assert_eq!(sorted_map.len(), 2);
+    /// ```
+    pub fn len(&self) -> usize {
+        self.map.len() - self.free_indexs.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     fn get_by_index(&self, index: usize) -> Option<(&K, &V)> {
         self.map
             .get_index(index)
