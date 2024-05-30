@@ -210,7 +210,34 @@ where
             .flat_map(|(_, indexs)| indexs.iter().filter_map(|index| self.get_by_index(*index)))
     }
 
-    /// Returns an iterator over the ValordMap.
+    /// Returns an reversesed iterator over the ValordMap.
+    /// The iterator yields all items from start to end order by value.ord_by().
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("xuandu", 3);
+    /// sorted_map.insert("xuandu", 1);
+    ///
+    /// let mut iter = sorted_map.rev_iter();
+    ///
+    /// assert_eq!(iter.next().unwrap(), (&"tedious", &2));
+    /// assert_eq!(iter.next().unwrap().1, &1);
+    /// assert_eq!(iter.next().unwrap().1, &1);
+    /// ```
+    pub fn rev_iter(&self) -> impl Iterator<Item = (&K, &V)> {
+        self.sorted_indexs
+            .iter()
+            .rev()
+            .flat_map(|(_, indexs)| indexs.iter().filter_map(|index| self.get_by_index(*index)))
+    }
+
+    /// Returns an mut iterator over the ValordMap.
     /// The iterator yields all items from start to end order by value.ord_by().
     ///
     /// # Example
@@ -245,6 +272,52 @@ where
         let indexs: Vec<_> = self
             .sorted_indexs
             .iter()
+            .flat_map(|(_, indexs)| indexs.iter())
+            .copied()
+            .collect();
+        let valord: *mut ValordMap<T, K, V> = self;
+        indexs.into_iter().filter_map(move |index| {
+            let vm = unsafe { valord.as_mut()? };
+            vm.get_mut_by_index(index)
+        })
+    }
+
+    /// Returns an reversesed mut iterator over the ValordMap.
+    /// The iterator yields all items from start to end order by value.ord_by().
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("xuandu", 3);
+    ///
+    ///
+    /// let mut iter = sorted_map.rev_iter_mut();
+    ///
+    /// let mut item1 = iter.next().unwrap();
+    /// let (k, v) = item1.get_mut_with_key();
+    /// assert_eq!(v, &mut 3);
+    /// *v = 0;
+    /// drop(item1);
+    ///
+    /// assert_eq!(iter.next().unwrap().get_mut_with_key(), (&"tedious", &mut 2));
+    /// assert_eq!(iter.next().unwrap().get_mut_with_key(), (&"qians", &mut 1));
+    /// assert!(iter.next().is_none());
+    /// drop(iter);
+    ///
+    /// let max_list = sorted_map.first();
+    /// assert_eq!(max_list.len(), 1);
+    /// assert_eq!(max_list, vec![(&"xuandu", &0)]);
+    /// ```
+    pub fn rev_iter_mut(&mut self) -> impl Iterator<Item = RefMut<'_, T, K, V>> {
+        let indexs: Vec<_> = self
+            .sorted_indexs
+            .iter()
+            .rev()
             .flat_map(|(_, indexs)| indexs.iter())
             .copied()
             .collect();
