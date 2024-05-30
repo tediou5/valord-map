@@ -17,6 +17,28 @@ You can directly sort based on your data structure or implement OrdBy to specify
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://github.com/tediou5/valord-map/blob/master/LICENSE
 
+## TODO LIST
+
+- [x] [insert](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.insert)
+- [x] [iter](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.iter)
+- [x] [rev_iter](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.rev_iter)
+- [x] [iter_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.iter_mut)
+- [x] [rev_iter_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.rev_iter_mut)
+- [x] [rev_iter_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.rev_iter_mut)
+- [x] [first](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.first)
+- [x] [first_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.first_mut)
+- [x] [last](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.last)
+- [x] [last_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.last_mut)
+- [x] [range](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.range)
+- [x] [range_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.range_mut)
+- [x] [get](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.get)
+- [x] [get_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.get_mut)
+- [x] [modify](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.modify)
+- [x] [remove](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.remove)
+- [x] [len](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.len)
+- [x] [is_empty](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.is_empty)
+- [ ] watcher
+
 ## Example
 
 ```rust

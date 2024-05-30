@@ -353,6 +353,38 @@ where
             .unwrap_or_default()
     }
 
+    /// Returns the first vector of key-value mut pairs in the map. The value in this pair is the minimum values in the map.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("xuandu", 3);
+    /// sorted_map.insert("xuandu", 1);
+    ///
+    /// let mut min_list = sorted_map.first_mut();
+    /// assert_eq!(min_list.len(), 2);
+    /// min_list.iter_mut().for_each(|rm| {
+    ///     let (_k, v) = rm.get_mut_with_key();
+    ///     *v = 0;
+    /// });
+    /// drop(min_list);
+    ///
+    /// let min_list = sorted_map.first();
+    /// assert!(min_list.iter().all(|(_, v)| **v == 0));
+    /// ```
+    pub fn first_mut(&mut self) -> Vec<RefMut<'_, T, K, V>> {
+        let valord: *mut ValordMap<T, K, V> = self;
+        self.sorted_indexs
+            .first_key_value()
+            .map(|(_, indexs)| Self::iter_mut_from_indexs(valord, indexs.clone()).collect())
+            .unwrap_or_default()
+    }
+
     /// Returns the last vector of key-value pairs in the map. The value in this pair is the maximum values in the map.
     ///
     /// # Example
@@ -375,6 +407,39 @@ where
         self.sorted_indexs
             .last_key_value()
             .map(|(_, indexs)| self.iter_from_indexs(indexs).collect())
+            .unwrap_or_default()
+    }
+
+    /// Returns the last vector of key-value mut pairs in the map. The value in this pair is the minimum values in the map.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut sorted_map = ValordMap::new();
+    /// sorted_map.insert("qians", 1);
+    /// sorted_map.insert("tedious", 2);
+    /// sorted_map.insert("xuandu", 3);
+    /// sorted_map.insert("sheng", 4);
+    ///
+    /// let mut max_list = sorted_map.last_mut();
+    /// assert_eq!(max_list.len(), 1);
+    /// let (k, v) = max_list[0].get_mut_with_key();
+    /// assert_eq!((&k, &v), (&&"sheng", &&mut 4));
+    ///
+    /// *v = 2;
+    /// drop(max_list);
+    ///
+    /// let max_list = sorted_map.last();
+    /// assert_eq!(max_list.len(), 1);
+    /// assert_eq!(max_list, vec![(&"xuandu", &3)]);
+    /// ```
+    pub fn last_mut(&mut self) -> Vec<RefMut<'_, T, K, V>> {
+        let valord: *mut ValordMap<T, K, V> = self;
+        self.sorted_indexs
+            .last_key_value()
+            .map(|(_, indexs)| Self::iter_mut_from_indexs(valord, indexs.clone()).collect())
             .unwrap_or_default()
     }
 
@@ -629,6 +694,21 @@ where
         indexs: &'a HashSet<usize>,
     ) -> impl Iterator<Item = (&K, &V)> {
         indexs.iter().filter_map(|index| self.get_by_index(*index))
+    }
+
+    fn iter_mut_from_indexs<'a>(
+        valord: *mut ValordMap<T, K, V>,
+        indexs: HashSet<usize>,
+    ) -> impl Iterator<Item = RefMut<'a, T, K, V>>
+    where
+        T: 'a,
+        K: 'a,
+        V: 'a,
+    {
+        indexs.into_iter().filter_map(move |index| {
+            let vm = unsafe { valord.as_mut()? };
+            vm.get_mut_by_index(index)
+        })
     }
 
     fn remove_from_indexs(sorted_indexs: &mut BTreeMap<T, HashSet<usize>>, key: &T, index: usize) {
