@@ -17,9 +17,15 @@ You can directly sort based on your data structure or implement OrdBy to specify
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://github.com/tediou5/valord-map/blob/master/LICENSE
 
-## TODO LIST
+## method
 
 - [x] [insert](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.insert)
+- [x] [entry](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.entry)
+  - [x] [or_insert](https://docs.rs/valord-map/latest/valord_map/enum.Entry.html#method.or_insert)
+  - [x] [or_insert_with](https://docs.rs/valord-map/latest/valord_map/enum.Entry.html#method.or_insert_with)
+  - [x] [or_insert_with_key](https://docs.rs/valord-map/latest/valord_map/enum.Entry.html#method.or_insert_with_key)
+  - [x] [and_modify](https://docs.rs/valord-map/latest/valord_map/enum.Entry.html#method.and_modify)
+  - [x] [or_default](https://docs.rs/valord-map/latest/valord_map/enum.Entry.html#method.or_default)
 - [x] [iter](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.iter)
 - [x] [rev_iter](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.rev_iter)
 - [x] [iter_mut](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.iter_mut)

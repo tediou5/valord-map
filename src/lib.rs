@@ -4,11 +4,13 @@
 mod order_by;
 pub use order_by::OrdBy;
 
+mod entry;
+pub use entry::{Entry, RawEntry};
+
 use indexmap::{map::MutableKeys, IndexMap};
 use std::{
     collections::{BTreeMap, HashSet, VecDeque},
     hash::Hash,
-    ops::{Deref, DerefMut},
 };
 
 pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
@@ -16,108 +18,6 @@ pub struct ValordMap<T, K, V: OrdBy<Target = T>> {
     sorted_indexs: BTreeMap<T, HashSet<usize>>,
 
     free_indexs: VecDeque<usize>,
-}
-
-pub struct RefMut<'v, T, K, V>
-where
-    T: Ord + Clone,
-    K: Hash + Eq,
-    V: OrdBy<Target = T>,
-{
-    index: usize,
-    valord: &'v mut ValordMap<T, K, V>,
-}
-
-impl<'v, T, K, V> RefMut<'v, T, K, V>
-where
-    T: Ord + Clone,
-    K: Hash + Eq,
-    V: OrdBy<Target = T>,
-{
-    fn try_new_by_key<'a: 'v>(
-        valord: &'a mut ValordMap<T, K, V>,
-        key: &K,
-    ) -> Option<RefMut<'v, T, K, V>> {
-        let (index, _, v) = valord.map.get_full(key)?;
-        let ord_by = v.as_ref().map(|v| v.ord_by())?;
-        ValordMap::<T, K, V>::remove_from_indexs(&mut valord.sorted_indexs, ord_by, index);
-        Some(Self { index, valord })
-    }
-
-    fn try_new_by_index<'a: 'v>(
-        valord: &'a mut ValordMap<T, K, V>,
-        index: usize,
-    ) -> Option<RefMut<'v, T, K, V>> {
-        let ord_by = valord.get_by_index(index)?.1.ord_by().clone();
-        ValordMap::<T, K, V>::remove_from_indexs(&mut valord.sorted_indexs, &ord_by, index);
-        Some(Self { index, valord })
-    }
-
-    pub fn get_mut_with_key(&mut self) -> (&K, &mut V) {
-        let (k, v) = self
-            .valord
-            .map
-            .get_index_mut(self.index)
-            .map(|(k, v)| (k, v.as_mut().unwrap()))
-            .unwrap();
-        ValordMap::<T, K, V>::remove_from_indexs(
-            &mut self.valord.sorted_indexs,
-            v.ord_by(),
-            self.index,
-        );
-
-        (k, v)
-    }
-}
-
-impl<'a, T, K, V> Deref for RefMut<'a, T, K, V>
-where
-    T: Ord + Clone,
-    K: Hash + Eq,
-    V: OrdBy<Target = T>,
-{
-    type Target = V;
-
-    fn deref(&self) -> &Self::Target {
-        // Safety: if value is not exist, try_new() will return None
-        self.valord
-            .get_by_index(self.index)
-            .map(|(_, v)| v)
-            .unwrap()
-    }
-}
-
-impl<'a, T, K, V> DerefMut for RefMut<'a, T, K, V>
-where
-    T: Ord + Clone,
-    K: Hash + Eq,
-    V: OrdBy<Target = T>,
-{
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        // Safety: if value is not exist, try_new() will return None
-        self.get_mut_with_key().1
-    }
-}
-
-impl<'a, T, K, V> Drop for RefMut<'a, T, K, V>
-where
-    T: Ord + Clone,
-    K: Hash + Eq,
-    V: OrdBy<Target = T>,
-{
-    fn drop(&mut self) {
-        if let Some(ord_by) = self
-            .valord
-            .get_by_index(self.index)
-            .map(|(_, v)| v.ord_by().clone())
-        {
-            self.valord
-                .sorted_indexs
-                .entry(ord_by)
-                .or_default()
-                .insert(self.index);
-        };
-    }
 }
 
 impl<T, K, V> ValordMap<T, K, V>
@@ -182,6 +82,44 @@ where
         };
 
         self.sorted_indexs.entry(ord_by).or_default().insert(index);
+    }
+
+    /// Get the given key’s corresponding entry in the map for insertion and/or
+    /// in-place manipulation
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut map = ValordMap::new();
+    /// map.entry("key").and_modify(|v| *v = "new value").or_insert("value");
+    ///
+    /// assert_eq!(map.get(&"key"), Some(&"value"));
+    ///
+    /// map.entry("key").and_modify(|v| *v = "new value").or_insert("value");
+    ///
+    /// assert_eq!(map.get(&"key"), Some(&"new value"));
+    /// ```
+    pub fn entry(&mut self, key: K) -> Entry<'_, T, K, V> {
+        let valord = self;
+        match valord.map.get_full(&key) {
+            Some((index, _, Some(_))) => return Entry::Occupied(RawEntry { index, valord }),
+            Some((index, _, None)) => return Entry::Vacant(RawEntry { index, valord }),
+            None => {}
+        }
+
+        let index = if let Some(free_index) = valord.free_indexs.front().copied() {
+            free_index
+        } else {
+            let index_entry = valord.map.entry(key);
+            let index = index_entry.index();
+            index_entry.or_insert(None);
+            valord.free_indexs.push_front(index);
+            index
+        };
+
+        Entry::Vacant(RawEntry { index, valord })
     }
 
     /// Returns an iterator over the ValordMap.
@@ -268,7 +206,7 @@ where
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"qians", &4)]);
     /// ```
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = RefMut<'_, T, K, V>> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = RawEntry<'_, T, K, V>> {
         let indexs: Vec<_> = self
             .sorted_indexs
             .iter()
@@ -313,7 +251,7 @@ where
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"xuandu", &0)]);
     /// ```
-    pub fn rev_iter_mut(&mut self) -> impl Iterator<Item = RefMut<'_, T, K, V>> {
+    pub fn rev_iter_mut(&mut self) -> impl Iterator<Item = RawEntry<'_, T, K, V>> {
         let indexs: Vec<_> = self
             .sorted_indexs
             .iter()
@@ -368,8 +306,8 @@ where
     ///
     /// let mut min_list = sorted_map.first_mut();
     /// assert_eq!(min_list.len(), 2);
-    /// min_list.iter_mut().for_each(|rm| {
-    ///     let (_k, v) = rm.get_mut_with_key();
+    /// min_list.iter_mut().for_each(|entry| {
+    ///     let (_k, v) = entry.get_mut_with_key();
     ///     *v = 0;
     /// });
     /// drop(min_list);
@@ -377,7 +315,7 @@ where
     /// let min_list = sorted_map.first();
     /// assert!(min_list.iter().all(|(_, v)| **v == 0));
     /// ```
-    pub fn first_mut(&mut self) -> Vec<RefMut<'_, T, K, V>> {
+    pub fn first_mut(&mut self) -> Vec<RawEntry<'_, T, K, V>> {
         let valord: *mut ValordMap<T, K, V> = self;
         self.sorted_indexs
             .first_key_value()
@@ -435,7 +373,7 @@ where
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"xuandu", &3)]);
     /// ```
-    pub fn last_mut(&mut self) -> Vec<RefMut<'_, T, K, V>> {
+    pub fn last_mut(&mut self) -> Vec<RawEntry<'_, T, K, V>> {
         let valord: *mut ValordMap<T, K, V> = self;
         self.sorted_indexs
             .last_key_value()
@@ -508,7 +446,7 @@ where
     ///     Some((&"xuandu", &8))
     /// );
     /// ```
-    pub fn range_mut<R>(&mut self, range: R) -> impl Iterator<Item = RefMut<'_, T, K, V>>
+    pub fn range_mut<R>(&mut self, range: R) -> impl Iterator<Item = RawEntry<'_, T, K, V>>
     where
         R: std::ops::RangeBounds<V::Target>,
     {
@@ -564,8 +502,8 @@ where
     /// assert_eq!(sorted_map.get(&"key2").unwrap(), &4);
     /// assert_eq!(sorted_map.last(), vec![(&"key2", &4)]);
     /// ```
-    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RefMut<'a, T, K, V>> {
-        RefMut::try_new_by_key(self, key)
+    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RawEntry<'a, T, K, V>> {
+        RawEntry::try_new_by_key(self, key)
     }
 
     /// Modify value in map, if exist return true, else return false
@@ -677,8 +615,8 @@ where
             .and_then(|(k, maybe_val)| maybe_val.as_ref().map(|v| (k, v)))
     }
 
-    fn get_mut_by_index(&mut self, index: usize) -> Option<RefMut<'_, T, K, V>> {
-        RefMut::try_new_by_index(self, index)
+    fn get_mut_by_index(&mut self, index: usize) -> Option<RawEntry<'_, T, K, V>> {
+        RawEntry::try_new_by_index(self, index)
     }
 
     fn get_full_mut<'a>(
@@ -699,7 +637,7 @@ where
     fn iter_mut_from_indexs<'a>(
         valord: *mut ValordMap<T, K, V>,
         indexs: HashSet<usize>,
-    ) -> impl Iterator<Item = RefMut<'a, T, K, V>>
+    ) -> impl Iterator<Item = RawEntry<'a, T, K, V>>
     where
         T: 'a,
         K: 'a,
