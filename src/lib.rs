@@ -41,13 +41,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let sorted_pairs: Vec<_> = sorted_map.iter().collect();
+    /// let sorted_pairs: Vec<_> = valord.iter().collect();
     ///
     /// println!("{:?}", sorted_pairs);
     ///
@@ -130,13 +130,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let mut iter = sorted_map.iter();
+    /// let mut iter = valord.iter();
     ///
     /// assert_eq!(iter.next().unwrap().1, &1);
     /// assert_eq!(iter.next().unwrap().1, &1);
@@ -156,13 +156,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let mut iter = sorted_map.rev_iter();
+    /// let mut iter = valord.rev_iter();
     ///
     /// assert_eq!(iter.next().unwrap(), (&"tedious", &2));
     /// assert_eq!(iter.next().unwrap().1, &1);
@@ -183,13 +183,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
     ///
     ///
-    /// let mut iter = sorted_map.iter_mut();
+    /// let mut iter = valord.iter_mut();
     ///
     /// let mut item1 = iter.next().unwrap();
     /// let (k, v) = item1.get_mut_with_key();
@@ -202,7 +202,7 @@ where
     /// assert!(iter.next().is_none());
     /// drop(iter);
     ///
-    /// let max_list = sorted_map.last();
+    /// let max_list = valord.last();
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"qians", &4)]);
     /// ```
@@ -228,13 +228,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
     ///
     ///
-    /// let mut iter = sorted_map.rev_iter_mut();
+    /// let mut iter = valord.rev_iter_mut();
     ///
     /// let mut item1 = iter.next().unwrap();
     /// let (k, v) = item1.get_mut_with_key();
@@ -247,7 +247,7 @@ where
     /// assert!(iter.next().is_none());
     /// drop(iter);
     ///
-    /// let max_list = sorted_map.first();
+    /// let max_list = valord.first();
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"xuandu", &0)]);
     /// ```
@@ -273,13 +273,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let min_list = sorted_map.first();
+    /// let min_list = valord.first();
     ///
     /// assert_eq!(min_list.len(), 2);
     /// assert!(min_list.iter().all(|(_, v)| **v == 1));
@@ -298,13 +298,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let mut min_list = sorted_map.first_mut();
+    /// let mut min_list = valord.first_mut();
     /// assert_eq!(min_list.len(), 2);
     /// min_list.iter_mut().for_each(|entry| {
     ///     let (_k, v) = entry.get_mut_with_key();
@@ -312,7 +312,7 @@ where
     /// });
     /// drop(min_list);
     ///
-    /// let min_list = sorted_map.first();
+    /// let min_list = valord.first();
     /// assert!(min_list.iter().all(|(_, v)| **v == 0));
     /// ```
     pub fn first_mut(&mut self) -> Vec<RawEntry<'_, T, K, V>> {
@@ -330,13 +330,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("xuandu", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("xuandu", 1);
     ///
-    /// let max_list = sorted_map.last();
+    /// let max_list = valord.last();
     ///
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"tedious", &2)]);
@@ -355,13 +355,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("xuandu", 3);
-    /// sorted_map.insert("sheng", 4);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("xuandu", 3);
+    /// valord.insert("sheng", 4);
     ///
-    /// let mut max_list = sorted_map.last_mut();
+    /// let mut max_list = valord.last_mut();
     /// assert_eq!(max_list.len(), 1);
     /// let (k, v) = max_list[0].get_mut_with_key();
     /// assert_eq!((&k, &v), (&&"sheng", &&mut 4));
@@ -369,7 +369,7 @@ where
     /// *v = 2;
     /// drop(max_list);
     ///
-    /// let max_list = sorted_map.last();
+    /// let max_list = valord.last();
     /// assert_eq!(max_list.len(), 1);
     /// assert_eq!(max_list, vec![(&"xuandu", &3)]);
     /// ```
@@ -388,16 +388,16 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("sheng", 3);
-    /// sorted_map.insert("xuandu", 4);
-    /// sorted_map.insert("xuandu2", 5);
-    /// sorted_map.insert("xuandu3", 6);
-    /// assert_eq!(sorted_map.range(4..).last().unwrap(), (&"xuandu3", &6));
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("sheng", 3);
+    /// valord.insert("xuandu", 4);
+    /// valord.insert("xuandu2", 5);
+    /// valord.insert("xuandu3", 6);
+    /// assert_eq!(valord.range(4..).last().unwrap(), (&"xuandu3", &6));
     /// assert_eq!(
-    ///     sorted_map
+    ///     valord
     ///         .range(4..)
     ///         .filter(|(_, v)| **v != 6)
     ///         .last()
@@ -421,15 +421,15 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
-    /// sorted_map.insert("tedious", 2);
-    /// sorted_map.insert("sheng", 3);
-    /// sorted_map.insert("xuandu", 4);
-    /// sorted_map.insert("xuandu2", 5);
-    /// sorted_map.insert("xuandu3", 6);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
+    /// valord.insert("tedious", 2);
+    /// valord.insert("sheng", 3);
+    /// valord.insert("xuandu", 4);
+    /// valord.insert("xuandu2", 5);
+    /// valord.insert("xuandu3", 6);
     ///
-    /// let mut range_iter = sorted_map.range_mut(4..);
+    /// let mut range_iter = valord.range_mut(4..);
     ///
     /// let mut item1 = range_iter.next().unwrap();
     /// let (k, v) = item1.get_mut_with_key();
@@ -440,7 +440,7 @@ where
     /// drop(range_iter);
     ///
     /// assert_eq!(
-    ///     sorted_map
+    ///     valord
     ///         .range(4..)
     ///         .last(),
     ///     Some((&"xuandu", &8))
@@ -470,13 +470,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("key1", 1);
-    /// sorted_map.insert("key2", 2);
-    /// sorted_map.insert("key3", 3);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("key1", 1);
+    /// valord.insert("key2", 2);
+    /// valord.insert("key3", 3);
     ///
-    /// let mut val1 = sorted_map.get(&"key2");
-    /// let mut val2 = sorted_map.get(&"key4");
+    /// let mut val1 = valord.get(&"key2");
+    /// let mut val2 = valord.get(&"key4");
     /// assert_eq!(val1.unwrap(), &2);
     /// assert_eq!(val2, None);
     /// ```
@@ -491,16 +491,16 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("key1", 1);
-    /// sorted_map.insert("key2", 2);
-    /// sorted_map.insert("key3", 3);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("key1", 1);
+    /// valord.insert("key2", 2);
+    /// valord.insert("key3", 3);
     ///
-    /// let mut val = sorted_map.get_mut(&"key2").unwrap();
+    /// let mut val = valord.get_mut(&"key2").unwrap();
     /// *val = 4;
     /// drop(val);
-    /// assert_eq!(sorted_map.get(&"key2").unwrap(), &4);
-    /// assert_eq!(sorted_map.last(), vec![(&"key2", &4)]);
+    /// assert_eq!(valord.get(&"key2").unwrap(), &4);
+    /// assert_eq!(valord.last(), vec![(&"key2", &4)]);
     /// ```
     pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<RawEntry<'a, T, K, V>> {
         RawEntry::try_new_by_key(self, key)
@@ -513,11 +513,11 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert("qians", 1);
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", 1);
     ///
-    /// assert!(sorted_map.modify(&"qians", |v| *v = 2));
-    /// assert_eq!(sorted_map.iter().next().unwrap(), (&"qians", &2));
+    /// assert!(valord.modify(&"qians", |v| *v = 2));
+    /// assert_eq!(valord.iter().next().unwrap(), (&"qians", &2));
     /// ```
     pub fn modify<F>(&mut self, key: &K, op: F) -> bool
     where
@@ -543,13 +543,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert(1, "a");
-    /// sorted_map.insert(2, "b");
+    /// let mut valord = ValordMap::new();
+    /// valord.insert(1, "a");
+    /// valord.insert(2, "b");
     ///
-    /// let removed_value = sorted_map.remove(&1);
+    /// let removed_value = valord.remove(&1);
     /// assert_eq!(removed_value, Some("a"));
-    /// assert_eq!(sorted_map.get(&1), None);
+    /// assert_eq!(valord.get(&1), None);
     /// ```
     pub fn remove(&mut self, key: &K) -> Option<V> {
         self.remove_entry(key).map(|v| v.1)
@@ -563,13 +563,13 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert(1, "a");
-    /// sorted_map.insert(2, "b");
+    /// let mut valord = ValordMap::new();
+    /// valord.insert(1, "a");
+    /// valord.insert(2, "b");
     ///
-    /// let removed_entry = sorted_map.remove_entry(&1);
+    /// let removed_entry = valord.remove_entry(&1);
     /// assert_eq!(removed_entry, Some((&1, "a")));
-    /// assert_eq!(sorted_map.get(&1), None);
+    /// assert_eq!(valord.get(&1), None);
     /// ```
     pub fn remove_entry<'a>(&'a mut self, key: &'a K) -> Option<(&K, V)> {
         if let Some((i, k, v)) = self.map.get_full_mut(key) {
@@ -589,20 +589,70 @@ where
     /// ```
     /// use valord_map::ValordMap;
     ///
-    /// let mut sorted_map = ValordMap::new();
-    /// sorted_map.insert(1, "a");
-    /// sorted_map.insert(2, "b");
-    /// sorted_map.insert(3, "c");
-    /// sorted_map.insert(2, "d");
+    /// let mut valord = ValordMap::new();
+    /// valord.insert(1, "a");
+    /// valord.insert(2, "b");
+    /// valord.insert(3, "c");
+    /// valord.insert(2, "d");
     ///
-    /// assert_eq!(sorted_map.len(), 3);
+    /// assert_eq!(valord.len(), 3);
     ///
-    /// let removed_value = sorted_map.remove(&1);
+    /// let removed_value = valord.remove(&1);
     /// assert_eq!(removed_value, Some("a"));
-    /// assert_eq!(sorted_map.len(), 2);
+    /// assert_eq!(valord.len(), 2);
     /// ```
     pub fn len(&self) -> usize {
         self.map.len() - self.free_indexs.len()
+    }
+
+    /// Re-order the ValordMap by value.ord_by().
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::cell::Cell;
+    /// use valord_map::ValordMap;
+    ///
+    /// let mut valord = ValordMap::new();
+    /// valord.insert("qians", Cell::new(1));
+    /// valord.insert("tedious", Cell::new(2));
+    /// valord.insert("xuandu", Cell::new(3));
+    ///
+    /// valord
+    ///     .iter()
+    ///     .enumerate()
+    ///     .for_each(|(i, (_, v))| v.set(5 - i));
+    ///
+    /// assert_eq!(
+    ///     valord.iter().collect::<Vec<_>>(),
+    ///     vec![
+    ///         (&"qians", &Cell::new(5)),
+    ///         (&"tedious", &Cell::new(4)),
+    ///         (&"xuandu", &Cell::new(3))
+    ///     ]
+    /// );
+    ///
+    /// valord.re_order();
+    ///
+    /// assert_eq!(
+    ///     valord.iter().collect::<Vec<_>>(),
+    ///     vec![
+    ///         (&"xuandu", &Cell::new(3)),
+    ///         (&"tedious", &Cell::new(4)),
+    ///         (&"qians", &Cell::new(5)),
+    ///     ]
+    /// );
+    /// ```
+    pub fn re_order(&mut self) {
+        let mut sorted = BTreeMap::<T, HashSet<usize>>::new();
+        self.map
+            .iter()
+            .enumerate()
+            .filter_map(|(i, (_, v))| v.as_ref().map(|v| (v.ord_by().clone(), i)))
+            .for_each(|(t, i)| {
+                sorted.entry(t).or_default().insert(i);
+            });
+        self.sorted_indexs = sorted;
     }
 
     pub fn is_empty(&self) -> bool {
@@ -672,6 +722,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
+
     use super::*;
 
     #[derive(Debug, PartialEq, Eq)]
@@ -695,14 +747,14 @@ mod tests {
     }
 
     #[test]
-    fn test_sorted_map_insert_order_by() {
-        let mut sorted_map = ValordMap::new();
-        sorted_map.insert("qians", OrdByValue::new(123, 1));
-        sorted_map.insert("tedious", OrdByValue::new(412, 2));
-        sorted_map.insert("xuandu", OrdByValue::new(125, 3));
-        sorted_map.insert("xuandu", OrdByValue::new(938, 1));
+    fn test_valord_insert_order_by() {
+        let mut valord = ValordMap::new();
+        valord.insert("qians", OrdByValue::new(123, 1));
+        valord.insert("tedious", OrdByValue::new(412, 2));
+        valord.insert("xuandu", OrdByValue::new(125, 3));
+        valord.insert("xuandu", OrdByValue::new(938, 1));
 
-        let sorted_pairs: Vec<_> = sorted_map.iter().collect();
+        let sorted_pairs: Vec<_> = valord.iter().collect();
 
         assert_eq!(sorted_pairs.len(), 3);
         assert_eq!(sorted_pairs[0].1.order_by, 1);
@@ -711,34 +763,67 @@ mod tests {
     }
 
     #[test]
-    fn test_sorted_map_remove_non_existent() {
-        let mut sorted_map = ValordMap::new();
-        sorted_map.insert(1, "a");
-        sorted_map.insert(2, "b");
+    fn test_valord_remove_non_existent() {
+        let mut valord = ValordMap::new();
+        valord.insert(1, "a");
+        valord.insert(2, "b");
 
-        let removed_value = sorted_map.remove(&3);
+        let removed_value = valord.remove(&3);
         assert_eq!(removed_value, None);
-        assert_eq!(sorted_map.get(&3), None);
+        assert_eq!(valord.get(&3), None);
     }
 
     #[test]
-    fn test_sorted_map_multiple_insert_and_remove() {
-        let mut sorted_map = ValordMap::new();
-        sorted_map.insert("qians", 1);
-        sorted_map.insert("tedious", 2);
-        sorted_map.insert("xuandu", 3);
+    fn test_valord_multiple_insert_and_remove() {
+        let mut valord = ValordMap::new();
+        valord.insert("qians", 1);
+        valord.insert("tedious", 2);
+        valord.insert("xuandu", 3);
 
-        assert_eq!(sorted_map.remove(&"tedious"), Some(2));
-        assert_eq!(sorted_map.remove(&"qians"), Some(1));
+        assert_eq!(valord.remove(&"tedious"), Some(2));
+        assert_eq!(valord.remove(&"qians"), Some(1));
 
-        sorted_map.insert("x", 2);
-        sorted_map.insert("y", 4);
+        valord.insert("x", 2);
+        valord.insert("y", 4);
 
-        let sorted_pairs: Vec<_> = sorted_map.iter().collect();
+        let sorted_pairs: Vec<_> = valord.iter().collect();
         println!("sorted_pairs: {sorted_pairs:?}");
         assert_eq!(sorted_pairs.len(), 3);
         assert_eq!(sorted_pairs[0], (&"x", &2));
         assert_eq!(sorted_pairs[1], (&"xuandu", &3));
         assert_eq!(sorted_pairs[2], (&"y", &4));
+    }
+
+    #[test]
+    fn re_order() {
+        let mut valord = ValordMap::new();
+        valord.insert("qians", Cell::new(1));
+        valord.insert("tedious", Cell::new(2));
+        valord.insert("xuandu", Cell::new(3));
+
+        valord
+            .iter()
+            .enumerate()
+            .for_each(|(i, (_, v))| v.set(5 - i));
+
+        assert_eq!(
+            valord.iter().collect::<Vec<_>>(),
+            vec![
+                (&"qians", &Cell::new(5)),
+                (&"tedious", &Cell::new(4)),
+                (&"xuandu", &Cell::new(3))
+            ]
+        );
+
+        valord.re_order();
+
+        assert_eq!(
+            valord.iter().collect::<Vec<_>>(),
+            vec![
+                (&"xuandu", &Cell::new(3)),
+                (&"tedious", &Cell::new(4)),
+                (&"qians", &Cell::new(5)),
+            ]
+        );
     }
 }

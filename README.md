@@ -42,6 +42,7 @@ You can directly sort based on your data structure or implement OrdBy to specify
 - [x] [modify](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.modify)
 - [x] [remove](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.remove)
 - [x] [len](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.len)
+- [x] [re_order](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.re_order)
 - [x] [is_empty](https://docs.rs/valord-map/latest/valord_map/struct.ValordMap.html#method.is_empty)
 - [ ] watcher
 
