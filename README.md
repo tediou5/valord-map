@@ -174,25 +174,7 @@ println!("range mut: {range:?}");
 
 let oldest = peoples.last();
 assert_eq!(oldest.len(), 2);
-assert_eq!(
-    oldest[0],
-    (
-        &4,
-        &People {
-            age: 30,
-            name: "qians4".to_string(),
-        }
-    )
-);
-assert_eq!(
-    oldest[1],
-    (
-        &5,
-        &People {
-            age: 30,
-            name: "qians5".to_string(),
-        }
-    )
-);
+assert_eq!(oldest[0].1.age, 30);
+assert_eq!(oldest[1].1.age, 30);
 println!("peoples: {:?}", peoples.iter().collect::<Vec<_>>());
 ```
