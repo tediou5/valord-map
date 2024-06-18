@@ -9,8 +9,8 @@ struct People {
 impl OrdBy for People {
     type Target = u8;
 
-    fn ord_by(&self) -> &Self::Target {
-        &self.age
+    fn ord_by(&self) -> Self::Target {
+        self.age
     }
 }
 

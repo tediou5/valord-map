@@ -62,11 +62,11 @@ where
     }
 
     fn _insert(&mut self, key: K, value: V) {
-        let ord_by = value.ord_by().clone();
+        let ord_by = value.ord_by();
 
         let index = if let Some((index, _k, old_val)) = self.map.get_full_mut(&key) {
             if let Some(old_val) = old_val {
-                Self::remove_from_indexs(&mut self.sorted_indexs, old_val.ord_by(), index);
+                Self::remove_from_indexs(&mut self.sorted_indexs, &old_val.ord_by(), index);
                 *old_val = value;
             }
             index
@@ -524,10 +524,10 @@ where
         F: Fn(&mut V),
     {
         if let Some((index, _, v)) = Self::get_full_mut(&mut self.map, key) {
-            Self::remove_from_indexs(&mut self.sorted_indexs, v.ord_by(), index);
+            Self::remove_from_indexs(&mut self.sorted_indexs, &v.ord_by(), index);
             op(v);
             self.sorted_indexs
-                .entry(v.ord_by().clone())
+                .entry(v.ord_by())
                 .or_default()
                 .insert(index);
             true
@@ -575,7 +575,7 @@ where
         if let Some((i, k, v)) = self.map.get_full_mut(key) {
             if let Some(old) = v.take() {
                 self.free_indexs.push_back(i);
-                Self::remove_from_indexs(&mut self.sorted_indexs, old.ord_by(), i);
+                Self::remove_from_indexs(&mut self.sorted_indexs, &old.ord_by(), i);
                 return Some((k, old));
             };
         }
@@ -648,7 +648,7 @@ where
         self.map
             .iter()
             .enumerate()
-            .filter_map(|(i, (_, v))| v.as_ref().map(|v| (v.ord_by().clone(), i)))
+            .filter_map(|(i, (_, v))| v.as_ref().map(|v| (v.ord_by(), i)))
             .for_each(|(t, i)| {
                 sorted.entry(t).or_default().insert(i);
             });
@@ -741,8 +741,8 @@ mod tests {
     impl OrdBy for OrdByValue {
         type Target = usize;
 
-        fn ord_by(&self) -> &Self::Target {
-            &self.order_by
+        fn ord_by(&self) -> Self::Target {
+            self.order_by
         }
     }
 

@@ -45,7 +45,7 @@ where
                 if let Some(ref v) = v {
                     ValordMap::<T, K, V>::remove_from_indexs(
                         &mut self.valord.sorted_indexs,
-                        v.ord_by(),
+                        &v.ord_by(),
                         self.index,
                     );
                 }
@@ -64,7 +64,7 @@ where
                 if let Some(ref v) = v {
                     ValordMap::<T, K, V>::remove_from_indexs(
                         &mut self.valord.sorted_indexs,
-                        v.ord_by(),
+                        &v.ord_by(),
                         self.index,
                     );
                 }
@@ -83,7 +83,7 @@ where
             .unwrap();
         ValordMap::<T, K, V>::remove_from_indexs(
             &mut self.valord.sorted_indexs,
-            v.ord_by(),
+            &v.ord_by(),
             self.index,
         );
 
